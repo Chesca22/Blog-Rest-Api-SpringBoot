@@ -2,6 +2,7 @@ package com.francisca.mytracker.serviceImpl;
 
 import com.francisca.mytracker.dto.TaskDTO;
 import com.francisca.mytracker.dto.UserDTO;
+import com.francisca.mytracker.model.Status;
 import com.francisca.mytracker.model.Task;
 import com.francisca.mytracker.model.User;
 import com.francisca.mytracker.repository.TaskRepository;
@@ -30,7 +31,7 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @InjectMocks
-    private UserServiceImpl userService;
+    private UserServiceImpl userServiceImpl;
 
     private Task task;
     private User user;
@@ -46,8 +47,8 @@ class UserServiceImplTest {
         taskList.add(task);
 
         this.user= new User(1, "may june", "june@gmail.com", "1234",taskList);
-        this.task = new Task(1, "my task", "trying out new task", "pending", dateTime, dateTime, dateTime, user);
-        this.taskDTO = new TaskDTO("my task", "trying out new task");
+        this.task = new Task(1, "my task", "trying out new task", Status.PENDING, dateTime, dateTime, dateTime, user);
+        this.taskDTO = new TaskDTO("to read", "read up for the task", 1);
         this.userDTO = new UserDTO("may june", "june@gmail.com", "1234");
         when(userRepository.save(user)).thenReturn(user);
         when(taskRepository.save(task)).thenReturn(task);
@@ -60,44 +61,67 @@ class UserServiceImplTest {
 
     }
 
-    @Test
-    void registerUser() {
+        @Test
+        void registerUser() {
+            when(userServiceImpl.registerUser(userDTO)).thenReturn(user);
+            var actual = userServiceImpl.registerUser(userDTO);
+            var expected = user;
+            assertEquals( expected , actual);
+        }
 
-    }
+        @Test
+        void tologinUser_Successfull() {
+            String message = "Success";
+            assertEquals(message , userServiceImpl.loginUser("enwerevincent@gmail.com" , "12345"));
+        }
 
-    @Test
-    void loginUser() {
-    }
+        @Test
+        void loginUser_Unsuccessfull() {
+            String message = "incorrect password";
+            assertEquals(message , userServiceImpl.loginUser("enwerevincent@gmail.com" , "1234"));
+        }
 
-    @Test
-    void createdTask() {
-    }
 
-    @Test
-    void updateTitleAndDescription() {
-    }
+        @Test
+        void createTask() {
+            when(userServiceImpl.createdTask(taskDTO)).thenReturn(task);
+            assertEquals(task , userServiceImpl.createdTask(taskDTO));
+        }
 
-    @Test
-    void getTaskById() {
-    }
+        @Test
+        void updateTitleAndDescription() {
+            assertEquals(task , userServiceImpl.updateTitleAndDescription(taskDTO , 1));
+        }
 
-    @Test
-    void viewAllTask() {
-    }
+        @Test
+        void viewAllTasks() {
+            assertEquals(1 , userServiceImpl.viewAllTask().size());
+        }
 
-    @Test
-    void updateTaskStatus() {
-    }
+        @Test
+        void viewAllTaskByStatus() {
 
-    @Test
-    void viewAllTaskByStatus() {
-    }
+            assertEquals(taskList , userServiceImpl.viewAllTaskByStatus("pending", 1));
+        }
 
-    @Test
-    void deletedById() {
-    }
+//    @Test
+//    void deleteById() {
+//        when(userServiceImpl.deleteById(1)).thenReturn(true);
+//        assertTrue(userServiceImpl.deleteById(1));
+//    }
 
-    @Test
-    void getUserByEmail() {
+        @Test
+        void updateTaskStatus() {
+            assertTrue(userServiceImpl.updateTaskStatus("ongoing" , 1));
+        }
+
+        @Test
+        void getUserByEmail() {
+            assertEquals(user , userServiceImpl.getUserByEmail("enwerevincent@gmail.com"));
+        }
+
+        @Test
+        void getTaskById() {
+            assertEquals(task, userServiceImpl.getTaskById(1));
+        }
     }
-}

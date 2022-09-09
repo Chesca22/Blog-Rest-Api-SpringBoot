@@ -3,22 +3,24 @@ package com.francisca.mytracker.serviceImpl;
 import com.francisca.mytracker.dto.TaskDTO;
 import com.francisca.mytracker.dto.UserDTO;
 import com.francisca.mytracker.exception.TaskNotFoundException;
+import com.francisca.mytracker.exception.UserNotFoundException;
+import com.francisca.mytracker.model.Status;
 import com.francisca.mytracker.model.Task;
 import com.francisca.mytracker.model.User;
 import com.francisca.mytracker.repository.TaskRepository;
 import com.francisca.mytracker.repository.UserRepository;
 import com.francisca.mytracker.service.UserService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-//import org.springframework.security.core.userdetails.UsernameNotFoundException;
-//import org.springframework.stereotype.Service;
+import lombok.Setter;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
+@Getter
+@Setter
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
@@ -50,9 +52,17 @@ public class UserServiceImpl implements UserService {
         Task task = new Task();
         task.setTitle(taskDto.getTitle());
         task.setDescription(taskDto.getDescription());
+        task.setStatus(Status.PENDING);
+        task.setDescription(taskDto.getDescription());
+        User loginUser = getUserById(taskDto.getUser_id());
+        task.setUser(loginUser);
        return taskRepository.save(task);
     }
+    @Override
+    public User getUserById(Integer id){
+        return userRepository.findById(id).orElseThrow(()->new TaskNotFoundException("Task not found"));
 
+    }
     @Override
    public Task updateTitleAndDescription(TaskDTO taskDTO, int id){
         Task task = getTaskById(id);
@@ -75,9 +85,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Task> viewAllTaskByStatus(String status){
+    public List<Task> viewAllTaskByStatus(String status, int user_id){
         return taskRepository.listOfTasksByStatus(status);
     }
+
     @Override
    public boolean deletedById(int id){
         taskRepository.deleteById(id);
@@ -85,8 +96,45 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public User getUserByEmail(String email){
-        return userRepository.findUserByEmail(email).get();
+        return userRepository.findUserByEmail(email).orElseThrow(()-> new UserNotFoundException(email + "not found"));
     }
+    @Override
+    public String moveStatusForward(int id){
+        String message = "";
+        Task task = taskRepository.findById(id).get();
+        if(task.getStatus().equals(Status.PENDING)){
+            task.setStatus(Status.IN_PROGRESS);
+            taskRepository.save(task);
+            message = "in progress";
+        }
+        else if(task.getStatus().equals(Status.IN_PROGRESS)){
+            task.setStatus(Status.COMPLETED);
+            task.setCompletedAt(LocalDateTime.now());
+            taskRepository.save(task);
 
+            message = " completed";
+        }
+        else{
+            message = "unauthorized move";
+        }
+        return message;
+    }
+@Override
+    public String moveStatusBackwards(int id){
+        String message = "";
+        Task task = taskRepository.findById(id).get();
+        if(task.getStatus().equals(Status.IN_PROGRESS)){
+            task.setStatus(Status.PENDING);
+            taskRepository.save(task);
+            message = "pending";
+        }
+        else { message = " unauthorized move";
+        }
+        return message;
+    }
+@Override
+public List<Task> showTaskByUser(int id){
+        return taskRepository.listOfTasksByUserId(id);
+}
 
 }

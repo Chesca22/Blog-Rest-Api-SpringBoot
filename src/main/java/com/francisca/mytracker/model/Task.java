@@ -22,8 +22,9 @@ public class Task {
     private String title;
     private String description;
 
-   @Column(columnDefinition = "varchar(255) default 'pending'")
-    private String status;
+  // @Column(columnDefinition = "varchar(255) default 'pending'")
+   @Enumerated(EnumType.STRING)
+    private Status status;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
